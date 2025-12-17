@@ -56,7 +56,7 @@ impl FileDetector {
 
         match extension.as_str() {
             // Documents
-            "pdf" | "doc" | "docx" | "txt" | "rtf" | "odt" | "xls" | "xlsx" | "ppt" | "pptx" => {
+            "pdf" | "doc" | "docx" | "txt" | "rtf" | "odt" | "xls" | "xlsx" | "ppt" | "pptx" | "csv" => {
                 FileCategory::Document
             }
 

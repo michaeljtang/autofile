@@ -51,6 +51,16 @@ impl FileWatcher {
             EventKind::Create(_) | EventKind::Modify(_) => {
                 for path in &event.paths {
                     if path.is_file() {
+                        // Ignore hidden files.
+                        if path.file_name()
+                            .and_then(|name| name.to_str())
+                            .map(|s| s.starts_with('.'))
+                            .unwrap_or(false)
+                        {
+                            log::debug!("Ignoring hidden file: {:?}", path);
+                            continue;
+                        }
+
                         log::info!("New file detected: {:?}", path);
 
                         // Small delay to ensure file is fully written
