@@ -1,5 +1,6 @@
 mod categorizer;
 mod detector;
+mod matcher;
 mod mover;
 mod organizer;
 mod watcher;

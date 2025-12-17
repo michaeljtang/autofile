@@ -1,5 +1,5 @@
 use anyhow::Result;
-use log::{debug, warn};
+use log::{debug, info, warn};
 use std::fs;
 use std::path::Path;
 
@@ -21,17 +21,25 @@ impl FileDetector {
         // First try magic bytes detection
         if let Ok(bytes) = fs::read(path) {
             if let Some(kind) = infer::get(&bytes) {
-                debug!("Detected MIME type: {}", kind.mime_type());
+                let mime_type = kind.mime_type();
+                let matcher_type = kind.matcher_type();
 
-                return Ok(match kind.matcher_type() {
+                let category = match matcher_type {
                     infer::MatcherType::Image => FileCategory::Image,
                     infer::MatcherType::Video => FileCategory::Video,
                     infer::MatcherType::Audio => FileCategory::Audio,
-                    infer::MatcherType::Archive => FileCategory::Archive,
+                    infer::MatcherType::Archive => FileCategory::Document,
                     infer::MatcherType::Doc => FileCategory::Document,
                     infer::MatcherType::Font => FileCategory::Document,
                     _ => Self::detect_by_extension(path)
-                });
+                };
+
+                info!(
+                    "MIME {} | Categorized as: {:?}",
+                    mime_type,
+                    category
+                );
+                return Ok(category);
             }
         }
 
