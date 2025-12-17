@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use log::{info, warn};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -27,20 +26,20 @@ impl FileMover {
         // Handle file name conflicts
         destination = Self::resolve_conflict(&destination)?;
 
-        info!("Moving {:?} -> {:?}", source, destination);
+        log::info!("Moving {:?} -> {:?}", source, destination);
 
         // Attempt to move the file
         match fs::rename(source, &destination) {
             Ok(_) => {
-                info!("Successfully moved file to {:?}", destination);
+                log::info!("Successfully moved file to {:?}", destination);
                 Ok(destination)
             }
             Err(e) => {
                 // If rename fails (e.g., across filesystems), try copy + delete
-                warn!("Rename failed, attempting copy + delete: {}", e);
+                log::warn!("Rename failed, attempting copy + delete: {}", e);
                 fs::copy(source, &destination).context("Failed to copy file")?;
                 fs::remove_file(source).context("Failed to remove source file after copy")?;
-                info!("Successfully copied and removed file to {:?}", destination);
+                log::info!("Successfully copied and removed file to {:?}", destination);
                 Ok(destination)
             }
         }
@@ -73,7 +72,7 @@ impl FileMover {
 
             let new_path = parent.join(new_name);
             if !new_path.exists() {
-                warn!(
+                log::warn!(
                     "File conflict detected, using new name: {:?}",
                     new_path.file_name()
                 );

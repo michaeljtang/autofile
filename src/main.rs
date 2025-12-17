@@ -1,12 +1,13 @@
 mod categorizer;
+mod config;
 mod detector;
 mod matcher;
 mod mover;
 mod organizer;
+mod preprocessor;
 mod watcher;
 
 use anyhow::{Context, Result};
-use log::{error, info};
 use organizer::FileOrganizer;
 use std::env;
 use std::path::PathBuf;
@@ -17,16 +18,16 @@ fn main() {
     // Initialize logger
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-    info!("Starting AutoFile - Smart File Organizer");
+    log::info!("Starting AutoFile - Smart File Organizer");
 
     // Get watch directory from args or use Downloads
     let watch_dir = get_watch_directory().unwrap();
 
-    info!("Monitoring directory: {:?}", watch_dir);
+    log::info!("Monitoring directory: {:?}", watch_dir);
 
     // Validate watch directory exists
     if !watch_dir.exists() {
-        error!("Watch directory doesn't exist");
+        log::error!("Watch directory doesn't exist");
         std::process::exit(1);
     }
 
@@ -40,7 +41,7 @@ fn main() {
     std::thread::spawn(move || {
         for file_path in rx {
             if let Err(e) = organizer.organize_file(&file_path) {
-                error!("Error organizing file {:?}: {}", file_path, e);
+                log::error!("Error organizing file {:?}: {}", file_path, e);
             }
         }
     });

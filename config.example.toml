@@ -1,0 +1,9 @@
+# AutoFile Configuration File
+# Copy this file to ~/.config/autofile/config.toml (Linux/macOS)
+# or %APPDATA%\autofile\config.toml (Windows)
+
+[matcher]
+# List of folder names to exclude from semantic matching
+# These folders will never be selected as destinations for files
+# Example: excluded_folders = ["Archive", "Old Files", "Backup", "Trash"]
+excluded_folders = []

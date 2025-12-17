@@ -1,6 +1,5 @@
 use crate::detector::FileCategory;
 use anyhow::{Context, Result};
-use log::info;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -72,22 +71,18 @@ impl Categorizer {
         Ok(Self { rules })
     }
 
-    pub fn with_custom_rules(rules: HashMap<FileCategory, CategoryRule>) -> Self {
-        Self { rules }
-    }
-
     pub fn get_destination(&self, category: &FileCategory) -> Option<&PathBuf> {
         self.rules.get(category).map(|rule| &rule.destination)
     }
 
-    pub fn get_rule(&self, category: &FileCategory) -> Option<&CategoryRule> {
-        self.rules.get(category)
+    pub fn _with_custom_rules(rules: HashMap<FileCategory, CategoryRule>) -> Self {
+        Self { rules }
     }
 
     pub fn ensure_destinations_exist(&self) -> Result<()> {
         for (category, rule) in &self.rules {
             if !rule.destination.exists() {
-                info!(
+                log::info!(
                     "Creating destination directory for {:?}: {:?}",
                     category, rule.destination
                 );

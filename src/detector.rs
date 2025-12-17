@@ -1,5 +1,4 @@
 use anyhow::Result;
-use log::{debug, info, warn};
 use std::fs;
 use std::path::Path;
 
@@ -34,7 +33,7 @@ impl FileDetector {
                     _ => Self::detect_by_extension(path)
                 };
 
-                info!(
+                log::info!(
                     "MIME {} | Categorized as: {:?}",
                     mime_type,
                     category
@@ -44,7 +43,7 @@ impl FileDetector {
         }
 
         // Fallback to extension-based detection
-        warn!("Could not detect file type by magic bytes, falling back to extension");
+        log::warn!("Could not detect file type by magic bytes, falling back to extension");
         Ok(Self::detect_by_extension(path))
     }
 

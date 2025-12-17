@@ -1,0 +1,47 @@
+// Template for creating a new preprocessor
+//
+// Steps to add a new preprocessor:
+// 1. Copy this template to a new file (e.g., `webp_converter.rs`)
+// 2. Implement the Preprocessor trait
+// 3. Add the module to `mod.rs`
+// 4. Add an instance to the pipeline in `mod.rs` PreprocessorPipeline::new()
+
+use super::Preprocessor;
+use anyhow::Result;
+use std::path::{Path, PathBuf};
+
+/// Example preprocessor that does something to files
+pub struct ExamplePreprocessor;
+
+impl ExamplePreprocessor {
+    pub fn new() -> Self {
+        Self
+    }
+
+    // Add helper methods here
+}
+
+impl Preprocessor for ExamplePreprocessor {
+    fn name(&self) -> &str {
+        "Example Preprocessor"
+    }
+
+    fn should_process(&self, path: &Path) -> bool {
+        // Determine if this file should be processed
+        // Example: check file extension
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_str().unwrap_or("").to_lowercase();
+            ext_str == "example"
+        } else {
+            false
+        }
+    }
+
+    fn process(&self, path: &Path) -> Result<PathBuf> {
+        // Process the file and return the new path
+        // The path may be the same (in-place modification) or different (conversion)
+
+        // Example: just return the original path unchanged
+        Ok(path.to_path_buf())
+    }
+}
