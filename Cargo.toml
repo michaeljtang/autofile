@@ -16,14 +16,10 @@ serde_json = "1.0"
 toml = "0.8"
 dirs = "5.0"
 fastembed = "5.4.0"
-# Vision model dependencies (optional - for image renaming feature)
-# Uncomment when implementing vision model
-# candle-core = "0.8"
-# candle-nn = "0.8"
-# candle-transformers = "0.8"
-# tokenizers = { version = "0.20", default-features = false, features = ["onig"] }
-# image = "0.25"
-# hf-hub = "0.3"
+# Lightweight vision model dependencies for image renaming
+image = "0.25"
+reqwest = { version = "0.12", features = ["blocking"] }
+base64 = "0.22"
 
 [dev-dependencies]
 tempfile = "3.13"

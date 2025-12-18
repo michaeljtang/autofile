@@ -1,3 +1,4 @@
+use crate::utils;
 use anyhow::Result;
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use notify_debouncer_full::{new_debouncer, DebounceEventResult};
@@ -52,11 +53,7 @@ impl FileWatcher {
                 for path in &event.paths {
                     if path.is_file() {
                         // Ignore hidden files.
-                        if path.file_name()
-                            .and_then(|name| name.to_str())
-                            .map(|s| s.starts_with('.'))
-                            .unwrap_or(false)
-                        {
+                        if utils::file::is_hidden_file(path) {
                             log::debug!("Ignoring hidden file: {:?}", path);
                             continue;
                         }

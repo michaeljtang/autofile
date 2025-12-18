@@ -1,30 +1,32 @@
 use super::Preprocessor;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+use std::fs;
+use base64::{engine::general_purpose, Engine as _};
 
 /// Preprocessor that renames images using AI-generated descriptions
 ///
-/// This preprocessor uses a vision model (via candle-rs) to:
+/// Uses a lightweight vision model API to:
 /// 1. Analyze the image content
 /// 2. Generate a descriptive caption
 /// 3. Rename the file based on the caption
 ///
 /// Example: IMG_1234.jpg -> sunset_over_mountains_2024.jpg
-///
-/// NOTE: Vision model implementation is currently disabled by default.
-/// The infrastructure is in place - you need to:
-/// 1. Choose a vision model (BLIP-2, LLaVA, or custom)
-/// 2. Implement the model loading and inference
-/// 3. Enable in config.toml
 pub struct ImageRenamer {
     enabled: bool,
+    client: reqwest::blocking::Client,
 }
 
 impl ImageRenamer {
     pub fn new() -> Self {
-        // Disabled by default - requires vision model implementation
-        log::info!("Image renamer initialized (disabled - vision model not implemented)");
-        Self { enabled: false }
+        log::info!("Image renamer initialized with lightweight captioning");
+        Self {
+            enabled: true,
+            client: reqwest::blocking::Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()
+                .unwrap_or_else(|_| reqwest::blocking::Client::new()),
+        }
     }
 
     /// Check if the file is an image that should be renamed
@@ -62,11 +64,55 @@ impl ImageRenamer {
     }
 
     /// Generate a descriptive filename from image content
-    /// TODO: Implement with vision model of your choice
-    fn generate_descriptive_name(&self, _image_path: &Path) -> Result<String> {
-        // Vision model not yet implemented
-        // See VISION_MODEL_GUIDE.md for implementation instructions
-        Err(anyhow::anyhow!("Vision model not implemented"))
+    /// Uses Hugging Face's free inference API with BLIP model (ultra lightweight)
+    fn generate_descriptive_name(&self, image_path: &Path) -> Result<String> {
+        // Read and encode image to base64
+        let image_bytes = fs::read(image_path)
+            .context("Failed to read image file")?;
+
+        // For very quick local processing, just resize the image to reduce API payload
+        let img = image::load_from_memory(&image_bytes)
+            .context("Failed to load image")?;
+
+        // Resize to max 512px for speed
+        let img = img.resize(512, 512, image::imageops::FilterType::Nearest);
+
+        // Encode to JPEG bytes for smaller payload
+        let mut jpeg_bytes = Vec::new();
+        img.write_to(&mut std::io::Cursor::new(&mut jpeg_bytes), image::ImageFormat::Jpeg)
+            .context("Failed to encode image")?;
+
+        let base64_img = general_purpose::STANDARD.encode(&jpeg_bytes);
+
+        // Use Hugging Face's free Inference API (no auth needed for public models)
+        // Using BLIP - one of the smallest and fastest captioning models
+        let api_url = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base";
+
+        let response = self.client
+            .post(api_url)
+            .json(&serde_json::json!({
+                "inputs": base64_img
+            }))
+            .send()
+            .context("Failed to send request to captioning API")?;
+
+        if !response.status().is_success() {
+            // Fall back to simple description if API fails
+            log::warn!("API request failed, using generic name");
+            return Ok(String::from("image"));
+        }
+
+        let result: Vec<serde_json::Value> = response.json()
+            .context("Failed to parse API response")?;
+
+        if let Some(first) = result.first() {
+            if let Some(caption) = first.get("generated_text").and_then(|v| v.as_str()) {
+                return Ok(caption.to_string());
+            }
+        }
+
+        // Fallback
+        Ok(String::from("image"))
     }
 
     /// Sanitize a caption to make it a valid filename

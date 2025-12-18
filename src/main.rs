@@ -6,6 +6,7 @@ mod mover;
 mod organizer;
 mod preprocessor;
 mod watcher;
+mod utils;
 
 use anyhow::{Context, Result};
 use organizer::FileOrganizer;
